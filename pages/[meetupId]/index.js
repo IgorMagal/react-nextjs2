@@ -1,13 +1,15 @@
 import React from "react";
 import MeetupDetail from "../../components/meetups/MeetupDetail";
+import { MongoClient, ObjectId } from "mongodb";
 
 const MeetUpDetailsPage = (props) => {
+  //console.log(props.meetupData.image);
   return (
     <MeetupDetail
-      image={props.data.image}
-      title={props.data.title}
-      address={props.data.address}
-      description={props.data.description}
+      image={props.meetupData.image}
+      title={props.meetupData.title}
+      address={props.meetupData.address}
+      description={props.meetupData.description}
     />
   );
 };
@@ -15,40 +17,46 @@ const MeetUpDetailsPage = (props) => {
 export default MeetUpDetailsPage;
 
 export const getStaticPaths = async () => {
+  const client = await MongoClient.connect(
+    "mongodb+srv://igormagal:3Ukp1UDqYFKf9Z6d@cluster0.htt1uoh.mongodb.net/meetups?retryWrites=true&w=majority"
+  );
+  const db = client.db();
+
+  const meetupsCollection = db.collection("meetups");
+  const meetups = await meetupsCollection.find({}, { _id: 1 }).toArray();
+
+  client.close();
+
   return {
     fallback: false,
-    paths: [
-      {
-        params: {
-          meetupId: `id_1`,
-        },
-      },
-      {
-        params: {
-          meetupId: "id_2",
-        },
-      },
-      {
-        params: {
-          meetupId: "id_3",
-        },
-      },
-    ],
+    paths: meetups.map((m) => ({ params: { meetupId: m._id.toString() } })),
   };
 };
 
 export const getStaticProps = async (context) => {
   // get data from an API.
-  const meetupId = context.params.meetupId;
+  const meetupId = new ObjectId(context.params.meetupId);
+  //console.log(meetupId);
+  const client = await MongoClient.connect(
+    "mongodb+srv://igormagal:3Ukp1UDqYFKf9Z6d@cluster0.htt1uoh.mongodb.net/meetups?retryWrites=true&w=majority"
+  );
+  const db = client.db();
+  const meetupsCollection = db.collection("meetups");
+  const meetup = await meetupsCollection.findOne({
+    _id: meetupId,
+  });
+
+  client.close();
+  //console.log(meetup);
+
   return {
     props: {
-      data: {
-        image:
-          "https://media.istockphoto.com/id/1346988230/photo/frontenac-castle-in-quebec-city.jpg?b=1&s=170667a&w=0&k=20&c=SUX8V4nIE3n9709i5ziZQPNMawQWV_FJ2vh2lmTKDfA=",
-        id: meetupId,
-        title: "Meetup Details",
-        address: "1st Street, NY NY",
-        description: "This is meetup number 1.",
+      meetupData: {
+        id: meetup._id.toString(),
+        image: meetup.image,
+        address: meetup.address,
+        description: meetup.description,
+        title: meetup.title,
       },
     },
   };
