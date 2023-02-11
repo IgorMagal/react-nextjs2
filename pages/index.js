@@ -1,5 +1,6 @@
 import MeetupList from "../components/meetups/MeetupList";
 import { MongoClient } from "mongodb";
+import Head from "next/head";
 
 const DUMMY_MEETUPS = [
   {
@@ -28,8 +29,14 @@ const DUMMY_MEETUPS = [
 const MeetupListPage = (props) => {
   return (
     <>
+      <Head>
+        <title>React Meetups NextJS Project</title>
+        <meta
+          name="description"
+          content="Browse a hige list of great React Meetups!"
+        />
+      </Head>
       <h2>MeetupListPage</h2>
-
       <MeetupList meetups={props.meetups} />
     </>
   );
